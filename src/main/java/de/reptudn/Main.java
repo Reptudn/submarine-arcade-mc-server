@@ -138,7 +138,6 @@ public class Main {
             Task task = scheduler.scheduleNextTick(() -> System.out.println("Hey!"));
             task.cancel();
 
-
         });
 
         // Server Details on Server List Ping
