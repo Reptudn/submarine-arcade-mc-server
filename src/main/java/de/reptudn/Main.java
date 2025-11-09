@@ -52,7 +52,7 @@ public class Main {
 
         JNoise noise = JNoise.newBuilder()
                 .fastSimplex(FastSimplexNoiseGenerator.newBuilder().build())
-                .scale(0.005) // Low frequency for smooth terrain
+                .scale(0.01)
                 .build();
 
         instanceContainer.setGenerator(unit -> {
@@ -115,20 +115,17 @@ public class Main {
 
             player.sendPacket(notification.buildAddPacket());
 
-            // Give player permanent effects for better underwater visibility
             player.addEffect(new Potion(
                 PotionEffect.NIGHT_VISION,
                 100, // Level 1 (0-based indexing)
                 Integer.MAX_VALUE // Permanent duration
             ));
 
-            // Add water breathing so player doesn't drown
             player.addEffect(new Potion(
                 PotionEffect.WATER_BREATHING, 100, // Level 1
                 Integer.MAX_VALUE // Permanent duration
             ));
 
-            // Add conduit power for better underwater vision and faster swimming
             player.addEffect(new Potion(
                 PotionEffect.CONDUIT_POWER, 100, // Level 1
                 Integer.MAX_VALUE // Permanent duration
@@ -142,14 +139,12 @@ public class Main {
 
         // Server Details on Server List Ping
         globalEventHandler.addListener(ServerListPingEvent.class, event -> {
-            // int onlinePlayers = MinecraftServer.getConnectionManager().getOnlinePlayers().size();
             event.setStatus(Status.builder()
                     .description(Component.text("SubWars: Steeldiver Revived?!", NamedTextColor.GOLD))
                     .playerInfo(Status.PlayerInfo.builder()
                             .onlinePlayers(420)
                             .maxPlayers(500)
-                            .sample(NamedAndIdentified.named("Notch"))
-                            .sample(NamedAndIdentified.named(Component.text("Herobrine", NamedTextColor.AQUA)))
+                            .sample(NamedAndIdentified.named(Component.text("Reptudn", NamedTextColor.AQUA)))
                             .build())
                     .playerInfo(420, 500) // simpler alternative to set player count only
                     .versionInfo(new Status.VersionInfo("Skill", 47)) // set some fake version info

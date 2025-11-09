@@ -1,9 +1,12 @@
 package de.reptudn.commands;
 
 import net.minestom.server.command.builder.Command;
+import net.minestom.server.command.builder.arguments.ArgumentString;
 import net.minestom.server.command.builder.arguments.ArgumentType;
+import net.minestom.server.command.builder.suggestion.SuggestionEntry;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class GamemodeCommand extends Command {
     public GamemodeCommand() {
@@ -13,7 +16,7 @@ public class GamemodeCommand extends Command {
             sender.sendMessage("Usage: /gamemode <mode>");
         });
 
-        var gamemodeTypeArgument = ArgumentType.String("mode");
+        var gamemodeTypeArgument = getArgumentString();
 
         addSyntax((sender, context) -> {
            final String mode = context.get(gamemodeTypeArgument);
@@ -43,6 +46,21 @@ public class GamemodeCommand extends Command {
                 default -> sender.sendMessage("Unknown gamemode: " + mode);
            }
         }, gamemodeTypeArgument);
+    }
+
+    private static @NotNull ArgumentString getArgumentString() {
+        var gamemodeTypeArgument = ArgumentType.String("mode");
+        gamemodeTypeArgument.setSuggestionCallback((sender, context, suggestion) -> {
+            suggestion.addEntry(new SuggestionEntry("survival"));
+            suggestion.addEntry(new SuggestionEntry("creative"));
+            suggestion.addEntry(new SuggestionEntry("adventure"));
+            suggestion.addEntry(new SuggestionEntry("spectator"));
+            suggestion.addEntry(new SuggestionEntry("s"));
+            suggestion.addEntry(new SuggestionEntry("c"));
+            suggestion.addEntry(new SuggestionEntry("a"));
+            suggestion.addEntry(new SuggestionEntry("sp"));
+        });
+        return gamemodeTypeArgument;
     }
 
 }
