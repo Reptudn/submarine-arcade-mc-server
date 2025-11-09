@@ -1,0 +1,54 @@
+{
+    "textures": {
+        "0": "entity/torpedo"
+    },
+    "elements": [
+        {
+            "name": "torpedo_body",
+            "from": [6, 7, 2],
+            "to": [10, 9, 14],
+            "faces": {
+                "north": {"uv": [0, 0, 4, 2], "texture": "#0"},
+                "east": {"uv": [0, 2, 12, 4], "texture": "#0"},
+                "south": {"uv": [4, 0, 8, 2], "texture": "#0"},
+                "west": {"uv": [0, 2, 12, 4], "texture": "#0"},
+                "up": {"uv": [0, 4, 4, 16], "texture": "#0"},
+                "down": {"uv": [4, 4, 8, 16], "texture": "#0"}
+            }
+        },
+        {
+            "name": "torpedo_nose",
+            "from": [7, 7.5, 0],
+            "to": [9, 8.5, 2],
+            "faces": {
+                "north": {"uv": [8, 0, 10, 1], "texture": "#0"},
+                "east": {"uv": [8, 1, 10, 2], "texture": "#0"},
+                "south": {"uv": [10, 0, 12, 1], "texture": "#0"},
+                "west": {"uv": [8, 1, 10, 2], "texture": "#0"},
+                "up": {"uv": [8, 2, 10, 4], "texture": "#0"},
+                "down": {"uv": [10, 2, 12, 4], "texture": "#0"}
+            }
+        },
+        {
+            "name": "torpedo_fins",
+            "from": [7, 6, 12],
+            "to": [9, 10, 14],
+            "faces": {
+                "north": {"uv": [12, 0, 14, 4], "texture": "#0"},
+                "east": {"uv": [12, 4, 14, 8], "texture": "#0"},
+                "south": {"uv": [14, 0, 16, 4], "texture": "#0"},
+                "west": {"uv": [12, 4, 14, 8], "texture": "#0"},
+                "up": {"uv": [12, 8, 14, 10], "texture": "#0"},
+                "down": {"uv": [14, 8, 16, 10], "texture": "#0"}
+            }
+        }
+    ],
+    "display": {
+        "ground": {
+            "rotation": [0, 0, 0],
+            "translation": [0, 2, 0],
+            "scale": [0.5, 0.5, 0.5]
+        }
+    }
+}
+

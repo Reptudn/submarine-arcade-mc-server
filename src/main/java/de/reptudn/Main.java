@@ -3,8 +3,14 @@ package de.reptudn;
 import de.articdive.jnoise.generators.noisegen.opensimplex.FastSimplexNoiseGenerator;
 import de.articdive.jnoise.pipeline.JNoise;
 import de.reptudn.commands.GamemodeCommand;
+import de.reptudn.commands.ReloadCommand;
 import de.reptudn.commands.TestCommand;
 import de.reptudn.config.GameConfig;
+import de.reptudn.game.Weapons.SubmarineGun;
+import de.reptudn.game.Weapons.Weapon;
+import de.reptudn.game.Weapons.WeaponManager;
+import de.reptudn.world.WorldGeneratorUnderwater;
+import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
@@ -16,6 +22,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.event.server.ServerListPingEvent;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.InstanceManager;
@@ -50,39 +57,7 @@ public class Main {
 
         // instanceContainer.viewDistance(100); // das crazy view distance.. egal wir probieren xD
 
-        JNoise noise = JNoise.newBuilder()
-                .fastSimplex(FastSimplexNoiseGenerator.newBuilder().build())
-                .scale(0.01)
-                .build();
-
-        instanceContainer.setGenerator(unit -> {
-            Point start = unit.absoluteStart();
-            for (int x = 0; x < unit.size().x(); x++) {
-                for (int z = 0; z < unit.size().z(); z++) {
-                    Point bottom = start.add(x, 0, z);
-
-                    synchronized (noise) { // Synchronization is necessary for JNoise
-                        // Generate mountain height using GameConfig values
-                        double heightRange = GameConfig.MAX_MOUNTAIN_HEIGHT - GameConfig.MIN_MOUNTAIN_HEIGHT;
-                        double height = noise.evaluateNoise(bottom.x(), bottom.z()) * (heightRange / 2) + (heightRange / 2) + GameConfig.MIN_MOUNTAIN_HEIGHT;
-                        height = Math.max(GameConfig.MIN_MOUNTAIN_HEIGHT, Math.min(GameConfig.MAX_MOUNTAIN_HEIGHT, height));
-
-                        // Place bedrock at y=0 (bottom layer)
-                        unit.modifier().setBlock(bottom, Block.BEDROCK);
-
-                        // Fill stone mountains from min height to calculated height
-                        if (height > GameConfig.MIN_MOUNTAIN_HEIGHT) {
-                            unit.modifier().fill(bottom.add(0, GameConfig.MIN_MOUNTAIN_HEIGHT, 0), bottom.add(1, height, 1), Block.STONE);
-                        }
-
-                        // Fill with water from mountain surface to configured sea height
-                        if (height < GameConfig.SEA_HEIGHT) {
-                            unit.modifier().fill(bottom.add(0, height, 0), bottom.add(1, GameConfig.SEA_HEIGHT, 1), Block.WATER);
-                        }
-                    }
-                }
-            }
-        });
+        instanceContainer.setGenerator(new WorldGeneratorUnderwater(System.currentTimeMillis()));
 
         instanceContainer.setChunkSupplier(LightingChunk::new);
 
@@ -106,6 +81,8 @@ public class Main {
             sidebar.createLine(new Sidebar.ScoreboardLine("header", Component.text("Welcome to SubWars!", NamedTextColor.GREEN), 0));
             sidebar.createLine(new Sidebar.ScoreboardLine("description", Component.text("Enjoy your stay!", NamedTextColor.AQUA), 0));
             sidebar.addViewer(player);
+
+            WeaponManager.giveWeapon(player, new SubmarineGun());
 
             Notification notification = new Notification(
                 Component.text("Yo what's up!", NamedTextColor.DARK_RED),
@@ -135,6 +112,49 @@ public class Main {
             Task task = scheduler.scheduleNextTick(() -> System.out.println("Hey!"));
             task.cancel();
 
+        });
+
+        // Weapon interaction events
+        globalEventHandler.addListener(PlayerUseItemEvent.class, event -> {
+            Player player = event.getPlayer();
+
+            if (!WeaponManager.hasWeapon(player)) return;
+
+            Weapon weapon = WeaponManager.getWeapon(player);
+            if (weapon instanceof SubmarineGun submarineGun) {
+                // Check if player is holding the weapon (crossbow)
+                if (player.getItemInMainHand().material() == Material.CROSSBOW) {
+                    // Cancel the event to prevent item transformation
+                    event.setCancelled(true);
+
+                    // Shoot the weapon
+                    submarineGun.fireProjectile(player);
+
+                    // Update weapon item immediately and with slight delay to ensure it stays correct
+                    WeaponManager.updateWeaponItem(player);
+                    player.scheduler().scheduleNextTick(() -> {
+                        WeaponManager.updateWeaponItem(player);
+                    });
+                }
+            }
+        });
+
+        // Add right-click interaction for reloading
+        globalEventHandler.addListener(net.minestom.server.event.player.PlayerEntityInteractEvent.class, event -> {
+            Player player = event.getPlayer();
+
+            if (!WeaponManager.hasWeapon(player)) return;
+
+            Weapon weapon = WeaponManager.getWeapon(player);
+            if (weapon instanceof SubmarineGun submarineGun && player.getItemInMainHand().material() == Material.CROSSBOW) {
+                if (player.isSneaking()) {
+                    // Shift + Right click to reload
+                    submarineGun.reload();
+                    WeaponManager.updateWeaponItem(player);
+                    player.sendMessage(Component.text("Waffe nachgeladen! Munition: " +
+                        submarineGun.getAmmo() + "/" + submarineGun.getMaxAmmo(), NamedTextColor.GREEN));
+                }
+            }
         });
 
         // Server Details on Server List Ping
@@ -168,7 +188,7 @@ public class Main {
     private static void registerCommands() {
         var cmdManager = MinecraftServer.getCommandManager();
 
-        cmdManager.register(new TestCommand(), new GamemodeCommand());
+        cmdManager.register(new TestCommand(), new GamemodeCommand(), new ReloadCommand());
     }
 }
 
